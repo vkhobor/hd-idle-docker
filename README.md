@@ -4,10 +4,16 @@ Docker image for running `hd-idle` against host disks. Configure options with `H
 
 ## Run
 
+Pull image:
+
+```console
+docker pull ghcr.io/vkhobor/hd-idle-docker:latest
+```
+
 ```yaml
 services:
   hd-idle:
-    image: ghcr.io/<owner>/<repo>:latest
+    image: ghcr.io/vkhobor/hd-idle-docker:latest
     container_name: hd-idle
     restart: unless-stopped
     privileged: true
@@ -30,7 +36,7 @@ Equivalent command:
 ```console
 docker run -d --name hd-idle --privileged \
   -e 'HD_IDLE_OPTS=-i 0 -a /dev/disk/by-uuid/<uuid-of-disk-1> -i 900 -c ata -a /dev/disk/by-uuid/<uuid-of-disk-2> -i 600' \
-  -v /dev:/dev ghcr.io/<owner>/<repo>:latest
+  -v /dev:/dev ghcr.io/vkhobor/hd-idle-docker:latest
 ```
 
 The container must see `/proc/diskstats` and host devices. `privileged: true` with `/dev:/dev` provides this setup; test spin-down on the real host with a real disk.
