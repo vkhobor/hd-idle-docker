@@ -1,6 +1,6 @@
 # hd-idle Docker image
 
-Docker image for running `hd-idle` against host disks.
+Docker image for running `hd-idle` against host disks. Configure options with `HD_IDLE_OPTS`.
 
 ## Run
 
@@ -11,27 +11,26 @@ services:
     container_name: hd-idle
     restart: unless-stopped
     privileged: true
+    environment:
+      HD_IDLE_OPTS: "-i 0 -a /dev/disk/by-uuid/<uuid-of-disk-1> -i 900 -c ata -a /dev/disk/by-uuid/<uuid-of-disk-2> -i 600"
     volumes:
       - /dev:/dev
-      - ./hd-idle-config:/config
 ```
 
-On first start, the container creates `hd-idle` in the mounted `/config` volume (`./hd-idle-config/hd-idle` on the host), seeded with the package defaults. Defaults spin disks down after 10 minutes of inactivity. Edit that file using the `hd-idle` configuration options, then apply changes with `docker compose restart hd-idle`.
+`HD_IDLE_OPTS` passes options directly to `hd-idle`. This example disables spin-down by default, enables it for disk 1 after 900 seconds using ATA commands, and enables it for disk 2 after 600 seconds using the default command type. `-a` names disks for following `-i` settings; `hd-idle` resolves device symlinks when it starts.
 
-Without a `/config` mount, built-in defaults still work, but edits disappear when the container is recreated.
-
-Equivalent command (replace `/absolute/path`):
+Apply option changes by restarting the container:
 
 ```console
-docker run -d --name hd-idle --privileged -v /dev:/dev -v /absolute/path/hd-idle-config:/config ghcr.io/<owner>/<repo>:latest
+docker compose restart hd-idle
 ```
 
-## Config file example
+Equivalent command:
 
-```sh
-HD_IDLE_OPTS="-i 0 -a /dev/disk/by-uuid/<uuid-of-disk-1> -i 900 -c ata -a /dev/disk/by-uuid/<uuid-of-disk-2> -i 600"
+```console
+docker run -d --name hd-idle --privileged \
+  -e 'HD_IDLE_OPTS=-i 0 -a /dev/disk/by-uuid/<uuid-of-disk-1> -i 900 -c ata -a /dev/disk/by-uuid/<uuid-of-disk-2> -i 600' \
+  -v /dev:/dev ghcr.io/<owner>/<repo>:latest
 ```
-
-This disables spin-down by default, enables it for disk 1 after 900 seconds using ATA commands, and enables it for disk 2 after 600 seconds using the default command type. `-a` names disks for following `-i` settings; hd-idle resolves device symlinks when it starts.
 
 The container must see `/proc/diskstats` and host devices. `privileged: true` with `/dev:/dev` provides this setup; test spin-down on the real host with a real disk.
